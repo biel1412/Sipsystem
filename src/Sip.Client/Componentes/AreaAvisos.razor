@@ -1,0 +1,31 @@
+@implements IDisposable
+@inject Avisos Avisos
+
+@if (Avisos.Lista.Count > 0)
+{
+    <div class="avisos" role="status" aria-live="polite">
+        @foreach (var a in Avisos.Lista)
+        {
+            <div class="aviso @Classe(a.Tipo)" @key="a.Id">
+                <span>@a.Texto</span>
+                <button type="button" aria-label="Fechar" @onclick="() => Avisos.Remover(a.Id)">✕</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    protected override void OnInitialized() => Avisos.Mudou += Atualizar;
+
+    private void Atualizar() => InvokeAsync(StateHasChanged);
+
+    private static string Classe(TipoAviso t) => t switch
+    {
+        TipoAviso.Sucesso => "sucesso",
+        TipoAviso.Erro => "erro",
+        TipoAviso.Alerta => "alerta",
+        _ => "info"
+    };
+
+    public void Dispose() => Avisos.Mudou -= Atualizar;
+}

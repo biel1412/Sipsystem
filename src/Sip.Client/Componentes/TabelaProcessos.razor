@@ -1,0 +1,48 @@
+@if (Itens.Count == 0)
+{
+    <p class="vazio">Nenhum processo encontrado.</p>
+}
+else
+{
+    <div class="tabela-rolagem">
+        <table class="tabela">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Data</th>
+                    <th>Colaborador</th>
+                    <th>Status</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Itens)
+                {
+                    <tr @key="p.Id">
+                        <td>@p.Id</td>
+                        <td class="nowrap">@p.DataAnalise.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@p.Colaborador</td>
+                        <td><StatusSelo Status="@p.Status" /></td>
+                        <td class="descricao">@p.Descricao</td>
+                        <td class="acoes">
+                            <a href="processo/@p.Id/parecer" title="Parecer para imprimir ou salvar em PDF">Parecer</a>
+                            @if (p.QtdImagens > 0)
+                            {
+                                <a href="processo/@p.Id/imagens">Imagens (@p.QtdImagens)</a>
+                            }
+                            @if (p.Status == Opcoes.StatusDesvio)
+                            {
+                                <a href="sr-inspetor/@p.Id" class="acao-ia">Enviar desvio</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<ProcessoResumo> Itens { get; set; } = [];
+}

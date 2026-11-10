@@ -1,0 +1,24 @@
+@* Select de uma lista de textos simples (valor = texto). *@
+<select value="@Valor" @onchange="AoMudar">
+    @if (!SemVazio)
+    {
+        <option value="">Selecione</option>
+    }
+    @foreach (var o in Opcoes)
+    {
+        <option value="@o">@o</option>
+    }
+</select>
+
+@code {
+    [Parameter] public string? Valor { get; set; }
+    [Parameter] public EventCallback<string?> ValorChanged { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<string> Opcoes { get; set; } = [];
+    [Parameter] public bool SemVazio { get; set; }
+
+    private Task AoMudar(ChangeEventArgs e)
+    {
+        var v = e.Value?.ToString();
+        return ValorChanged.InvokeAsync(string.IsNullOrEmpty(v) ? null : v);
+    }
+}

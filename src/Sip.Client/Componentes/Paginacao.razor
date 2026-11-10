@@ -1,0 +1,16 @@
+@if (TotalPaginas > 1)
+{
+    <nav class="paginacao" aria-label="Páginas">
+        <button type="button" disabled="@(PaginaAtual <= 1)" @onclick="() => IrPara(PaginaAtual - 1)">‹ Anterior</button>
+        <span>Página @PaginaAtual de @TotalPaginas</span>
+        <button type="button" disabled="@(PaginaAtual >= TotalPaginas)" @onclick="() => IrPara(PaginaAtual + 1)">Próxima ›</button>
+    </nav>
+}
+
+@code {
+    [Parameter] public int PaginaAtual { get; set; }
+    [Parameter] public int TotalPaginas { get; set; }
+    [Parameter] public EventCallback<int> AoMudar { get; set; }
+
+    private Task IrPara(int pagina) => AoMudar.InvokeAsync(pagina);
+}

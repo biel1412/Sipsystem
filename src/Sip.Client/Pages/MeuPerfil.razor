@@ -1,0 +1,41 @@
+@page "/meu-perfil"
+@page "/meu_perfil"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject SessaoAuth Sessao
+@inject Avisos Avisos
+
+<PageTitle>Meu perfil - SIP</PageTitle>
+
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Meu perfil</h1>
+        <p class="ajuda">@Sessao.Usuario?.Nome · @Sessao.Usuario?.Email</p>
+    </div>
+    <a href="trocar-senha" class="botao secundario">Trocar senha</a>
+</div>
+
+@if (_resumo is null)
+{
+    <p class="carregando">Carregando…</p>
+}
+else
+{
+    <p>Resumo do mês atual comparado com o mês anterior.</p>
+    <div class="indicadores">
+        <Indicador Nome="Processos no mês" Valor="_resumo.TotalMesAtual" Diferenca="_resumo.DiffTotal" />
+        <Indicador Nome="Conformes" Valor="_resumo.ConformesMesAtual" Diferenca="_resumo.DiffConformes" Classe="conforme" />
+        <Indicador Nome="Desvios" Valor="_resumo.DesviosMesAtual" Diferenca="_resumo.DiffDesvios" Classe="desvio" MenorEhMelhor />
+    </div>
+}
+
+@code {
+    private PerfilResumo? _resumo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var r = await Api.GetAsync<PerfilResumo>("api/perfil");
+        if (r.Ok) _resumo = r.Dado;
+        else Avisos.Erro(r.Erro!);
+    }
+}

@@ -1,0 +1,51 @@
+@page "/processo/{Id:int}/imagens"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject Avisos Avisos
+
+<PageTitle>Imagens do processo #@Id - SIP</PageTitle>
+
+<div class="cabecalho-pagina">
+    <h1>Imagens do processo #@Id</h1>
+    <a href="processos" class="botao secundario">Voltar</a>
+</div>
+
+@if (_processo is null)
+{
+    <p class="carregando">Carregando…</p>
+}
+else
+{
+    <p class="ajuda">@_processo.Colaborador · <StatusSelo Status="@_processo.Status" /> · @_processo.DataAnalise.ToString("dd/MM/yyyy HH:mm")</p>
+    @if (_processo.Imagens.Count == 0)
+    {
+        <section class="cartao vazio"><p>Nenhuma evidência anexada.</p></section>
+    }
+    else
+    {
+        <div class="galeria">
+            @for (var i = 0; i < _processo.Imagens.Count; i++)
+            {
+                var img = _processo.Imagens[i];
+                <figure>
+                    <a href="api/imagens/@img.Id" target="_blank" rel="noopener">
+                        <img src="api/imagens/@img.Id" alt="Print @(i + 1)" loading="lazy" />
+                    </a>
+                    <figcaption>Print @(i + 1) · @img.NomeArquivo</figcaption>
+                </figure>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private ProcessoDetalhe? _processo;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var r = await Api.GetAsync<ProcessoDetalhe>($"api/processos/{Id}");
+        if (r.Ok) _processo = r.Dado;
+        else Avisos.Erro(r.Erro!);
+    }
+}

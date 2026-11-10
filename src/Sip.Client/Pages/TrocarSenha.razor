@@ -1,0 +1,55 @@
+@page "/trocar-senha"
+@attribute [Authorize]
+@inject SessaoAuth Sessao
+@inject NavigationManager Nav
+@inject Avisos Avisos
+
+<PageTitle>Trocar senha - SIP</PageTitle>
+
+<section class="cartao estreito">
+    <h1>Trocar senha</h1>
+    @if (Sessao.Usuario?.PrecisaTrocarSenha == true)
+    {
+        <p class="destaque-alerta">Você entrou com a senha padrão. Crie uma senha pessoal para liberar o sistema.</p>
+    }
+
+    <EditForm Model="_modelo" OnValidSubmit="TrocarAsync" FormName="trocar-senha">
+        <DataAnnotationsValidator />
+        <Campo Rotulo="Senha atual">
+            <InputText @bind-Value="_modelo.SenhaAtual" type="password" autocomplete="current-password" />
+            <ValidationMessage For="() => _modelo.SenhaAtual" />
+        </Campo>
+        <Campo Rotulo="Nova senha" Ajuda="Mínimo de 8 caracteres.">
+            <InputText @bind-Value="_modelo.NovaSenha" type="password" autocomplete="new-password" />
+            <ValidationMessage For="() => _modelo.NovaSenha" />
+        </Campo>
+        <Campo Rotulo="Confirmar nova senha">
+            <InputText @bind-Value="_modelo.ConfirmarSenha" type="password" autocomplete="new-password" />
+            <ValidationMessage For="() => _modelo.ConfirmarSenha" />
+        </Campo>
+
+        @if (_erro is not null)
+        {
+            <p class="erro-form">@_erro</p>
+        }
+        <button type="submit" class="botao largo" disabled="@_enviando">Salvar nova senha</button>
+    </EditForm>
+</section>
+
+@code {
+    private readonly TrocarSenhaRequest _modelo = new();
+    private string? _erro;
+    private bool _enviando;
+
+    private async Task TrocarAsync()
+    {
+        _enviando = true;
+        _erro = await Sessao.TrocarSenhaAsync(_modelo);
+        _enviando = false;
+        if (_erro is null)
+        {
+            Avisos.Sucesso("Senha alterada com sucesso!");
+            Nav.NavigateTo("processos");
+        }
+    }
+}

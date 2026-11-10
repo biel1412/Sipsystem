@@ -1,0 +1,61 @@
+@page "/login"
+@layout LayoutLimpo
+@inject SessaoAuth Sessao
+@inject NavigationManager Nav
+@inject Avisos Avisos
+
+<PageTitle>Entrar - SIP</PageTitle>
+
+<section class="cartao login">
+    <img src="img/sr-inspetor.svg" alt="Sr. Inspetor" class="mascote-login" />
+    <h1>Entrar no SIP</h1>
+
+    <EditForm Model="_modelo" OnValidSubmit="EntrarAsync" FormName="login">
+        <DataAnnotationsValidator />
+        <Campo Rotulo="E-mail">
+            <InputText @bind-Value="_modelo.Email" type="email" autocomplete="username" />
+            <ValidationMessage For="() => _modelo.Email" />
+        </Campo>
+        <Campo Rotulo="Senha">
+            <InputText @bind-Value="_modelo.Senha" type="password" autocomplete="current-password" />
+            <ValidationMessage For="() => _modelo.Senha" />
+        </Campo>
+
+        @if (_erro is not null)
+        {
+            <p class="erro-form">@_erro</p>
+        }
+
+        <button type="submit" class="botao largo" disabled="@_enviando">@(_enviando ? "Entrando…" : "Entrar")</button>
+    </EditForm>
+
+    <p class="ajuda centro">Primeiro acesso? Use seu e-mail cadastrado e a senha padrão informada pela qualidade. Você vai criar uma senha nova em seguida.</p>
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "volta")] public string? Volta { get; set; }
+
+    private readonly LoginRequest _modelo = new();
+    private string? _erro;
+    private bool _enviando;
+
+    private async Task EntrarAsync()
+    {
+        _enviando = true;
+        _erro = await Sessao.EntrarAsync(_modelo);
+        _enviando = false;
+        if (_erro is not null) return;
+
+        if (Sessao.Usuario?.PrecisaTrocarSenha == true)
+        {
+            Avisos.Alerta("Primeiro acesso: crie uma senha nova para continuar.");
+            Nav.NavigateTo("trocar-senha");
+            return;
+        }
+
+        Avisos.Sucesso($"Bem-vindo(a), {Sessao.Usuario?.Nome}!");
+        // Só volta para endereços internos (evita redirecionar para outro site).
+        var destino = !string.IsNullOrEmpty(Volta) && !Volta.Contains("//") && !Volta.Contains(':') ? Volta : "processos";
+        Nav.NavigateTo(destino);
+    }
+}

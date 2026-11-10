@@ -1,0 +1,71 @@
+@page "/grafico"
+@page "/grafico-processos"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject Avisos Avisos
+
+<PageTitle>Gráfico - SIP</PageTitle>
+
+<h1>Conformes x Desvios</h1>
+
+@if (_dados is null)
+{
+    <p class="carregando">Carregando…</p>
+}
+else if (Total == 0)
+{
+    <section class="cartao vazio"><p>Ainda não há processos registrados.</p></section>
+}
+else
+{
+    <section class="cartao grafico">
+        <p class="grafico-titulo">Todos os processos registrados · @Total no total</p>
+
+        @* Barra 100% empilhada: cada parte tem rótulo, ícone e textura (não depende só da cor). *@
+        <div class="barra-empilhada" role="img"
+             aria-label="@($"{_dados.Conformes} conformes ({PctConforme:0}%) e {_dados.Desvios} desvios ({PctDesvio:0}%)")">
+            @if (_dados.Conformes > 0)
+            {
+                <div class="segmento conforme" style="flex-grow:@_dados.Conformes"
+                     title="@($"Conformes: {_dados.Conformes} ({PctConforme:0.0}%)")">
+                    @if (PctConforme >= 12) { <span>✓ @PctConforme.ToString("0")%</span> }
+                </div>
+            }
+            @if (_dados.Desvios > 0)
+            {
+                <div class="segmento desvio" style="flex-grow:@_dados.Desvios"
+                     title="@($"Desvios: {_dados.Desvios} ({PctDesvio:0.0}%)")">
+                    @if (PctDesvio >= 12) { <span>⚠ @PctDesvio.ToString("0")%</span> }
+                </div>
+            }
+        </div>
+
+        <ul class="legenda">
+            <li><span class="amostra conforme"></span> ✓ Conforme</li>
+            <li><span class="amostra desvio"></span> ⚠ Desvio</li>
+        </ul>
+
+        <table class="tabela compacta">
+            <thead><tr><th>Status</th><th class="num">Processos</th><th class="num">%</th></tr></thead>
+            <tbody>
+                <tr><td>✓ Conforme</td><td class="num">@_dados.Conformes</td><td class="num">@PctConforme.ToString("0.0")%</td></tr>
+                <tr><td>⚠ Desvio</td><td class="num">@_dados.Desvios</td><td class="num">@PctDesvio.ToString("0.0")%</td></tr>
+                <tr class="total"><td>Total</td><td class="num">@Total</td><td class="num">100%</td></tr>
+            </tbody>
+        </table>
+    </section>
+}
+
+@code {
+    private GraficoResumo? _dados;
+    private int Total => (_dados?.Conformes ?? 0) + (_dados?.Desvios ?? 0);
+    private double PctConforme => Total == 0 ? 0 : 100.0 * _dados!.Conformes / Total;
+    private double PctDesvio => Total == 0 ? 0 : 100.0 * _dados!.Desvios / Total;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var r = await Api.GetAsync<GraficoResumo>("api/grafico");
+        if (r.Ok) _dados = r.Dado;
+        else Avisos.Erro(r.Erro!);
+    }
+}

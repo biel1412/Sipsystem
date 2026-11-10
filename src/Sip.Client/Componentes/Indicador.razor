@@ -1,0 +1,19 @@
+<div class="indicador @Classe">
+    <span class="valor">@Valor</span>
+    <span class="nome">@Nome</span>
+    @if (Diferenca is int d)
+    {
+        var melhor = MenorEhMelhor ? d < 0 : d > 0;
+        <span class="variacao @(d == 0 ? "" : melhor ? "melhor" : "pior")">
+            @(d > 0 ? "▲ +" : d < 0 ? "▼ " : "= ")@d vs. mês anterior
+        </span>
+    }
+</div>
+
+@code {
+    [Parameter] public string Nome { get; set; } = "";
+    [Parameter] public int Valor { get; set; }
+    [Parameter] public int? Diferenca { get; set; }
+    [Parameter] public string? Classe { get; set; }
+    [Parameter] public bool MenorEhMelhor { get; set; }
+}

@@ -1,0 +1,15 @@
+@page "/"
+@page "/inicio"
+@layout LayoutLimpo
+
+<PageTitle>SIP - Sistema Integrado de Inspeção</PageTitle>
+
+<section class="boas-vindas">
+    <img src="img/logo_empresa.png" alt="Logo da empresa" class="logo-empresa" />
+    <h1>SIP - Sistema Integrado de Inspeção</h1>
+    <p>Registre inspeções, acompanhe indicadores e monte desvios com a ajuda do Sr. Inspetor.</p>
+    <AuthorizeView>
+        <Authorized><a href="processos" class="botao grande">Entrar no sistema</a></Authorized>
+        <NotAuthorized><a href="login" class="botao grande">Entrar</a></NotAuthorized>
+    </AuthorizeView>
+</section>

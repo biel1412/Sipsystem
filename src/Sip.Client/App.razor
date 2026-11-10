@@ -1,0 +1,22 @@
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+            <NotAuthorized>
+                <RedirecionarLogin />
+            </NotAuthorized>
+            <Authorizing>
+                <div class="carregando">Verificando acesso…</div>
+            </Authorizing>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Página não encontrada</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <div class="cartao vazio">
+                <h1>Página não encontrada</h1>
+                <p>O endereço acessado não existe. <a href="processos">Voltar para o início</a>.</p>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

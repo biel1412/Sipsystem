@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6204CB8F-8BAE-4F39-B720-A827D864ABC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sip.Api", "src\Sip.Api\Sip.Api.csproj", "{6A7D2E69-AF79-4018-9E0E-C74EEF113840}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sip.Shared", "src\Sip.Shared\Sip.Shared.csproj", "{967430FA-5991-4A36-B8C8-AF940B0821FA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EA90653D-6A6E-4C6D-8F5C-239A20A40CEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sip.Tests", "tests\Sip.Tests\Sip.Tests.csproj", "{65F0B680-9A27-444F-B3CF-7953C55863DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sip.Client", "src\Sip.Client\Sip.Client.csproj", "{A5DE6337-D045-47D5-A624-6A24A25F193E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6A7D2E69-AF79-4018-9E0E-C74EEF113840}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A7D2E69-AF79-4018-9E0E-C74EEF113840}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A7D2E69-AF79-4018-9E0E-C74EEF113840}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A7D2E69-AF79-4018-9E0E-C74EEF113840}.Release|Any CPU.Build.0 = Release|Any CPU
+		{967430FA-5991-4A36-B8C8-AF940B0821FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{967430FA-5991-4A36-B8C8-AF940B0821FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{967430FA-5991-4A36-B8C8-AF940B0821FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{967430FA-5991-4A36-B8C8-AF940B0821FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65F0B680-9A27-444F-B3CF-7953C55863DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65F0B680-9A27-444F-B3CF-7953C55863DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65F0B680-9A27-444F-B3CF-7953C55863DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65F0B680-9A27-444F-B3CF-7953C55863DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5DE6337-D045-47D5-A624-6A24A25F193E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5DE6337-D045-47D5-A624-6A24A25F193E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5DE6337-D045-47D5-A624-6A24A25F193E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5DE6337-D045-47D5-A624-6A24A25F193E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6A7D2E69-AF79-4018-9E0E-C74EEF113840} = {6204CB8F-8BAE-4F39-B720-A827D864ABC7}
+		{967430FA-5991-4A36-B8C8-AF940B0821FA} = {6204CB8F-8BAE-4F39-B720-A827D864ABC7}
+		{65F0B680-9A27-444F-B3CF-7953C55863DA} = {EA90653D-6A6E-4C6D-8F5C-239A20A40CEF}
+		{A5DE6337-D045-47D5-A624-6A24A25F193E} = {6204CB8F-8BAE-4F39-B720-A827D864ABC7}
+	EndGlobalSection
+EndGlobal

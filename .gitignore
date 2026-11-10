@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.swp
+appsettings.*.local.json
+TestResults/

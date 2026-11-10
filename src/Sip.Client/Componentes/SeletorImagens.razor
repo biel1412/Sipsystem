@@ -1,0 +1,121 @@
+@implements IAsyncDisposable
+@inject Navegador Navegador
+@inject Avisos Avisos
+
+<div id="@_idArea" class="seletor-imagens @(_arrastando ? "arrastando" : "")"
+     @ondragenter="() => _arrastando = true" @ondragleave="() => _arrastando = false" @ondrop="() => _arrastando = false">
+    <InputFile OnChange="AoEscolherAsync" multiple accept="image/png,image/jpeg,image/webp,image/gif" />
+    <div class="seletor-texto">
+        <strong>Clique para escolher, arraste os prints aqui</strong>
+        <span>ou cole com <kbd>Ctrl</kbd>+<kbd>V</kbd> em qualquer lugar da página (PNG, JPG, WEBP ou GIF · até @Opcoes.MaxImagens imagens de @Formatacao.TamanhoLegivel(Opcoes.MaxBytesImagem))</span>
+    </div>
+</div>
+
+@if (Imagens.Count > 0)
+{
+    <ul class="miniaturas">
+        @for (var i = 0; i < Imagens.Count; i++)
+        {
+            var indice = i;
+            var img = Imagens[indice];
+            <li @key="img">
+                <img src="data:@img.ContentType;base64,@img.Base64" alt="Print @(indice + 1)" />
+                <span class="legenda">Print @(indice + 1) · @img.NomeArquivo</span>
+                <button type="button" class="remover" aria-label="Remover print @(indice + 1)" @onclick="() => RemoverAsync(indice)">✕</button>
+            </li>
+        }
+    </ul>
+}
+@if (_lendo)
+{
+    <p class="ajuda">Lendo imagens…</p>
+}
+
+@code {
+    [Parameter] public List<ImagemUpload> Imagens { get; set; } = [];
+    [Parameter] public EventCallback<List<ImagemUpload>> ImagensChanged { get; set; }
+
+    private readonly string _idArea = "imgs-" + Guid.NewGuid().ToString("N")[..8];
+    private DotNetObjectReference<SeletorImagens>? _ref;
+    private bool _arrastando;
+    private bool _lendo;
+
+    protected override async Task OnAfterRenderAsync(bool primeiraVez)
+    {
+        if (!primeiraVez) return;
+        _ref = DotNetObjectReference.Create(this);
+        await Navegador.EscutarColarAsync(_idArea, _ref);
+    }
+
+    private async Task AoEscolherAsync(InputFileChangeEventArgs e)
+    {
+        _lendo = true;
+        try
+        {
+            foreach (var arquivo in e.GetMultipleFiles(Opcoes.MaxImagens))
+            {
+                if (!Validar(arquivo.Name, arquivo.ContentType, arquivo.Size)) continue;
+                await using var stream = arquivo.OpenReadStream(Opcoes.MaxBytesImagem);
+                using var memoria = new MemoryStream();
+                await stream.CopyToAsync(memoria);
+                Imagens.Add(new ImagemUpload
+                {
+                    NomeArquivo = arquivo.Name,
+                    ContentType = arquivo.ContentType,
+                    Base64 = Convert.ToBase64String(memoria.ToArray()),
+                });
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            Avisos.Erro($"Você pode anexar no máximo {Opcoes.MaxImagens} imagens.");
+        }
+        finally
+        {
+            _lendo = false;
+        }
+        await ImagensChanged.InvokeAsync(Imagens);
+    }
+
+    [JSInvokable]
+    public async Task ImagemColada(string nome, string tipo, long tamanho, string base64)
+    {
+        if (!Validar(nome, tipo, tamanho)) return;
+        Imagens.Add(new ImagemUpload { NomeArquivo = nome, ContentType = tipo, Base64 = base64 });
+        await ImagensChanged.InvokeAsync(Imagens);
+        StateHasChanged();
+    }
+
+    private bool Validar(string nome, string tipo, long tamanho)
+    {
+        if (Imagens.Count >= Opcoes.MaxImagens)
+        {
+            Avisos.Alerta($"Limite de {Opcoes.MaxImagens} imagens atingido.");
+            return false;
+        }
+        if (!Opcoes.TiposImagem.Contains(tipo))
+        {
+            Avisos.Alerta($"'{nome}' não é uma imagem aceita.");
+            return false;
+        }
+        if (tamanho > Opcoes.MaxBytesImagem)
+        {
+            Avisos.Alerta($"'{nome}' passa de {Formatacao.TamanhoLegivel(Opcoes.MaxBytesImagem)}.");
+            return false;
+        }
+        return true;
+    }
+
+    private async Task RemoverAsync(int indice)
+    {
+        Imagens.RemoveAt(indice);
+        await ImagensChanged.InvokeAsync(Imagens);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await Navegador.PararDeEscutarColarAsync(_idArea); }
+        catch (JSDisconnectedException) { }
+        _ref?.Dispose();
+    }
+}

@@ -1,0 +1,71 @@
+@page "/processos"
+@page "/index"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject Navegador Navegador
+@inject Avisos Avisos
+
+<PageTitle>Processos - SIP</PageTitle>
+
+<div class="cabecalho-pagina">
+    <h1>Processos registrados</h1>
+    <div class="botoes">
+        <a href="processo/novo" class="botao">+ Novo processo</a>
+        <a href="sr-inspetor" class="botao ia">Montar desvio com o Sr. Inspetor</a>
+    </div>
+</div>
+
+<section class="cartao">
+    <h2>Exportar para Excel</h2>
+    <div class="linha-filtros">
+        <Campo Rotulo="Data inicial"><input type="date" @bind="_exportInicio" /></Campo>
+        <Campo Rotulo="Data final"><input type="date" @bind="_exportFim" /></Campo>
+        <button type="button" class="botao secundario" disabled="@_exportando" @onclick="ExportarAsync">
+            @(_exportando ? "Gerando…" : "Baixar .xlsx")
+        </button>
+    </div>
+</section>
+
+<section class="cartao">
+    @if (_pagina is null)
+    {
+        <p class="carregando">Carregando processos…</p>
+    }
+    else
+    {
+        <p class="ajuda">@_pagina.TotalItens processo(s) no total.</p>
+        <TabelaProcessos Itens="_pagina.Itens" />
+        <Paginacao PaginaAtual="_pagina.PaginaAtual" TotalPaginas="_pagina.TotalPaginas" AoMudar="CarregarAsync" />
+    }
+</section>
+
+@code {
+    private Pagina<ProcessoResumo>? _pagina;
+    private DateOnly? _exportInicio = DateOnly.FromDateTime(DateTime.Today.AddDays(1 - DateTime.Today.Day));
+    private DateOnly? _exportFim = DateOnly.FromDateTime(DateTime.Today);
+    private bool _exportando;
+
+    protected override Task OnInitializedAsync() => CarregarAsync(1);
+
+    private async Task CarregarAsync(int pagina)
+    {
+        var r = await Api.GetAsync<Pagina<ProcessoResumo>>($"api/processos?pagina={pagina}");
+        if (r.Ok) _pagina = r.Dado;
+        else Avisos.Erro(r.Erro!);
+    }
+
+    private async Task ExportarAsync()
+    {
+        if (_exportInicio is null || _exportFim is null)
+        {
+            Avisos.Alerta("Informe o intervalo de datas para exportar.");
+            return;
+        }
+        _exportando = true;
+        var r = await Api.BaixarAsync($"api/exportar-xlsx?dataInicio={_exportInicio:yyyy-MM-dd}&dataFim={_exportFim:yyyy-MM-dd}");
+        _exportando = false;
+        if (!r.Ok) { Avisos.Erro(r.Erro!); return; }
+        await Navegador.BaixarAsync($"processos_{_exportInicio:yyyy-MM-dd}_a_{_exportFim:yyyy-MM-dd}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", r.Dado!);
+    }
+}

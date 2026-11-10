@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="t">
+  <title id="t">Sr. Inspetor: mascote do SIP procurando erros com uma lupa</title>
+  <defs>
+    <radialGradient id="fundo" cx="50%" cy="45%" r="60%">
+      <stop offset="0" stop-color="#e8f8f5"/>
+      <stop offset="1" stop-color="#c9ece5"/>
+    </radialGradient>
+    <radialGradient id="lente" cx="40%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+      <stop offset=".55" stop-color="#bff3ff" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#5fd3ef" stop-opacity=".6"/>
+    </radialGradient>
+    <radialGradient id="monoculo" cx="45%" cy="40%" r="60%">
+      <stop offset="0" stop-color="#eafffb"/>
+      <stop offset=".6" stop-color="#4fe0c3"/>
+      <stop offset="1" stop-color="#139c83"/>
+    </radialGradient>
+    <linearGradient id="casaco" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#34495e"/>
+      <stop offset="1" stop-color="#22313f"/>
+    </linearGradient>
+    <clipPath id="recorte"><circle cx="120" cy="120" r="116"/></clipPath>
+  </defs>
+
+  <circle cx="120" cy="120" r="116" fill="url(#fundo)"/>
+
+  <g clip-path="url(#recorte)">
+    <!-- casaco -->
+    <path d="M38 240 C42 192 70 170 120 168 C170 170 198 192 202 240 Z" fill="url(#casaco)"/>
+    <path d="M120 170 L92 176 L108 214 Z" fill="#d9c8a3"/>
+    <path d="M120 170 L148 176 L132 214 Z" fill="#d9c8a3"/>
+    <path d="M104 178 L120 172 L136 178 L120 236 Z" fill="#f4f6f7"/>
+    <!-- gravata borboleta -->
+    <path d="M120 184 L104 176 L104 194 Z" fill="#1abc9c"/>
+    <path d="M120 184 L136 176 L136 194 Z" fill="#1abc9c"/>
+    <circle cx="120" cy="185" r="4.5" fill="#16a085"/>
+    <!-- botões com "LEDs" -->
+    <circle cx="120" cy="206" r="3" fill="#1abc9c"/>
+    <circle cx="120" cy="220" r="3" fill="#1abc9c"/>
+  </g>
+
+  <!-- pescoço e cabeça -->
+  <rect x="108" y="150" width="24" height="22" rx="8" fill="#f2c7a5"/>
+  <ellipse cx="120" cy="118" rx="46" ry="44" fill="#f8d5b8"/>
+  <ellipse cx="74" cy="122" rx="8" ry="11" fill="#f2c7a5"/>
+  <ellipse cx="166" cy="122" rx="8" ry="11" fill="#f2c7a5"/>
+  <!-- bochechas -->
+  <ellipse cx="92" cy="136" rx="8" ry="5" fill="#f3a99a" opacity=".6"/>
+  <ellipse cx="150" cy="136" rx="8" ry="5" fill="#f3a99a" opacity=".6"/>
+
+  <!-- chapéu de detetive com faixa tecnológica -->
+  <path d="M70 96 C70 58 92 42 120 42 C148 42 170 58 170 96 Z" fill="#2c3e50"/>
+  <path d="M62 98 C80 88 160 88 178 98 C182 104 176 108 168 106 C150 100 90 100 72 106 C64 108 58 104 62 98 Z" fill="#22313f"/>
+  <rect x="72" y="84" width="96" height="11" rx="5" fill="#1abc9c"/>
+  <!-- trilhas de circuito na faixa -->
+  <path d="M82 89.5 H96 L100 86 H112 M128 89.5 H140 L144 92.5 H158" stroke="#0e6655" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <circle cx="112" cy="86" r="1.8" fill="#eafffb"/>
+  <circle cx="158" cy="92.5" r="1.8" fill="#eafffb"/>
+  <!-- antena -->
+  <path d="M120 42 C121 32 126 26 132 22" stroke="#2c3e50" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="133" cy="21" r="5.5" fill="#f1c40f"/>
+  <circle cx="133" cy="21" r="9" fill="#f1c40f" opacity=".25"/>
+
+  <!-- sobrancelhas -->
+  <path d="M90 104 Q99 98 108 103" stroke="#6e4b2a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M132 101 Q142 95 152 101" stroke="#6e4b2a" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- olho esquerdo -->
+  <ellipse cx="99" cy="117" rx="8" ry="9.5" fill="#fff"/>
+  <circle cx="101" cy="118" r="5" fill="#2c3e50"/>
+  <circle cx="103" cy="116" r="1.8" fill="#fff"/>
+
+  <!-- olho direito com monóculo digital -->
+  <circle cx="142" cy="116" r="15" fill="url(#monoculo)" stroke="#22313f" stroke-width="3.5"/>
+  <circle cx="142" cy="116" r="15" fill="none" stroke="#eafffb" stroke-width="1" stroke-dasharray="3 4" opacity=".8"/>
+  <circle cx="143" cy="117" r="5.5" fill="#2c3e50"/>
+  <circle cx="145" cy="115" r="2" fill="#fff"/>
+  <path d="M157 118 C164 126 166 140 160 152" stroke="#22313f" stroke-width="1.6" fill="none"/>
+  <circle cx="160" cy="153" r="2.2" fill="#1abc9c"/>
+
+  <!-- nariz e bigode -->
+  <ellipse cx="121" cy="130" rx="6" ry="5" fill="#eeb894"/>
+  <path d="M120 138 C110 134 96 136 90 146 C100 144 108 146 120 142 C132 146 140 144 150 146 C144 136 130 134 120 138 Z" fill="#6e4b2a"/>
+  <!-- sorriso -->
+  <path d="M108 150 Q120 158 132 150" stroke="#8a4b3a" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- braço e lupa (procurando o erro) -->
+  <g clip-path="url(#recorte)">
+  <path d="M176 238 C180 214 184 196 178 182" stroke="#22313f" stroke-width="22" fill="none" stroke-linecap="round"/>
+  </g>
+  <circle cx="176" cy="176" r="10" fill="#f8d5b8"/>
+  <rect x="168" y="146" width="12" height="34" rx="5" transform="rotate(28 174 163)" fill="#8e5b34"/>
+  <rect x="168" y="146" width="12" height="7" rx="2" transform="rotate(28 174 163)" fill="#1abc9c"/>
+  <circle cx="196" cy="128" r="30" fill="url(#lente)" stroke="#2c3e50" stroke-width="7"/>
+  <circle cx="196" cy="128" r="30" fill="none" stroke="#1abc9c" stroke-width="2" stroke-dasharray="6 5"/>
+  <!-- o "bug" encontrado dentro da lente -->
+  <g transform="translate(196 131)">
+    <path d="M-9 -4 L-15 -9 M9 -4 L15 -9 M-10 2 L-17 2 M10 2 L17 2 M-9 8 L-15 13 M9 8 L15 13" stroke="#922b21" stroke-width="2.2" stroke-linecap="round"/>
+    <ellipse cx="0" cy="3" rx="10" ry="12" fill="#c0392b"/>
+    <circle cx="0" cy="-10" r="6" fill="#922b21"/>
+    <path d="M0 -7 V15" stroke="#922b21" stroke-width="1.6"/>
+    <circle cx="-4" cy="2" r="2" fill="#fff" opacity=".85"/>
+    <circle cx="4" cy="8" r="2" fill="#fff" opacity=".85"/>
+    <path d="M-3 -15 L-6 -20 M3 -15 L6 -20" stroke="#922b21" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+  <path d="M178 110 Q184 102 194 101" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>
+</svg>

@@ -1,0 +1,81 @@
+@page "/processo/{Id:int}/parecer"
+@page "/processo/{Id:int}/pdf"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject Navegador Navegador
+@inject Avisos Avisos
+
+<PageTitle>Parecer do processo #@Id - SIP</PageTitle>
+
+<div class="cabecalho-pagina nao-imprimir">
+    <h1>Parecer do processo #@Id</h1>
+    <div class="botoes">
+        <a href="processos" class="botao secundario">Voltar</a>
+        <button type="button" class="botao" @onclick="() => Navegador.ImprimirAsync()">Imprimir / Salvar PDF</button>
+    </div>
+</div>
+<p class="ajuda nao-imprimir">Na janela de impressão, escolha "Salvar como PDF" para gerar o arquivo.</p>
+
+@if (_p is not null)
+{
+    <article class="parecer">
+        <header>
+            <img src="img/logo_empresa.png" alt="" class="parecer-logo" />
+            <h2>PARECER DE INSPEÇÃO DE PROCESSO</h2>
+        </header>
+
+        <dl class="dados">
+            <dt>Data</dt><dd>@(_p.DataExecucao?.ToString("dd/MM/yyyy") ?? _p.DataAnalise.ToString("dd/MM/yyyy HH:mm"))</dd>
+            <dt>Colaborador</dt><dd>@_p.Colaborador</dd>
+            <dt>Status</dt><dd>@_p.Status</dd>
+            @if (_p.TipoErro is not null) { <dt>Tipo de erro</dt><dd>@Opcoes.Texto(Opcoes.TipoErro, _p.TipoErro)</dd> }
+            @if (_p.Gravidade is not null) { <dt>Gravidade</dt><dd>@Opcoes.Texto(Opcoes.Gravidade, _p.Gravidade)</dd> }
+            @if (_p.Inspetor is not null) { <dt>Inspetor</dt><dd>@_p.Inspetor</dd> }
+            @if (_p.CpfCnpj is not null) { <dt>CPF/CNPJ</dt><dd>@Formatacao.MascararDocumento(_p.CpfCnpj)</dd> }
+        </dl>
+
+        <h3>Descrição</h3>
+        <p class="texto-livre">@(string.IsNullOrWhiteSpace(_p.Descricao) ? "—" : _p.Descricao)</p>
+
+        @if (!string.IsNullOrWhiteSpace(_p.Observacoes))
+        {
+            <h3>Observações / procedimento correto</h3>
+            <p class="texto-livre">@_p.Observacoes</p>
+        }
+
+        @if (_p.Status == Opcoes.StatusDesvio)
+        {
+            <h3>Parecer</h3>
+            <p>Conforme análise realizada, identificamos um ponto de atenção neste processo.
+               Recomenda-se avaliação complementar e plano de ação conforme aplicável.</p>
+        }
+
+        <h3>Evidências</h3>
+        @if (_p.Imagens.Count == 0)
+        {
+            <p>Nenhuma evidência anexada.</p>
+        }
+        else
+        {
+            @for (var i = 0; i < _p.Imagens.Count; i++)
+            {
+                <figure class="evidencia">
+                    <img src="api/imagens/@_p.Imagens[i].Id" alt="Print @(i + 1)" />
+                    <figcaption>Print @(i + 1)</figcaption>
+                </figure>
+            }
+        }
+    </article>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private ProcessoDetalhe? _p;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var r = await Api.GetAsync<ProcessoDetalhe>($"api/processos/{Id}");
+        if (r.Ok) _p = r.Dado;
+        else Avisos.Erro(r.Erro!);
+    }
+}

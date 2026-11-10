@@ -1,0 +1,296 @@
+@page "/sr-inspetor"
+@page "/sr-inspetor/{ProcessoId:int}"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject Navegador Navegador
+@inject Avisos Avisos
+
+<PageTitle>Sr. Inspetor - SIP</PageTitle>
+
+<section class="sr-cabecalho">
+    <img src="img/sr-inspetor.svg" alt="Sr. Inspetor" class="sr-avatar @(_gerando ? "pensando" : "")" />
+    <div class="balao">
+        <h1>Sr. Inspetor</h1>
+        @if (_gerando)
+        {
+            <p>Hmm… deixa eu examinar esses prints com a minha lupa. Já já o desvio fica pronto!</p>
+        }
+        else if (_rascunho is not null)
+        {
+            <p>Pronto! Revise o texto abaixo, ajuste o que precisar e envie quando estiver tudo certo.</p>
+        }
+        else
+        {
+            <p>Me mostre os prints e conte o que deu errado. Depois escolha como você quer o desvio e eu monto o e-mail para você.</p>
+        }
+    </div>
+</section>
+
+<div class="sr-grade">
+    @* ---------- 1. Evidências ---------- *@
+    <section class="cartao">
+        <h2><span class="passo">1</span> Evidências</h2>
+
+        <div class="grade">
+            <Campo Rotulo="Colaborador">
+                <select value="@_colaboradorId" @onchange="AoEscolherColaborador" disabled="@(_processo is not null)">
+                    <option value="0">Selecione</option>
+                    @foreach (var c in _colaboradores)
+                    {
+                        <option value="@c.Id">@c.Nome</option>
+                    }
+                </select>
+            </Campo>
+            @if (_processo is not null)
+            {
+                <Campo Rotulo="Processo vinculado">
+                    <div class="processo-vinculado">
+                        <span>#@_processo.Id · <StatusSelo Status="@_processo.Status" /> · @Opcoes.Texto(Opcoes.TipoErro, _processo.TipoErro)</span>
+                        <a href="sr-inspetor">Desvincular</a>
+                    </div>
+                </Campo>
+            }
+        </div>
+
+        <Campo Rotulo="Prints do erro">
+            <SeletorImagens @bind-Imagens="_imagens" />
+        </Campo>
+
+        <Campo Rotulo="Descrição do erro" Ajuda="O que aconteceu, onde e por que é um desvio. Quanto mais claro, melhor o texto.">
+            <textarea rows="5" @bind="_descricao" @bind:event="oninput"
+                      placeholder="Ex.: Na autorização de BEM_NOVO, o colaborador aprovou sem conferir a certidão vencida (print 2)."></textarea>
+        </Campo>
+
+        <Campo Rotulo="Instrução extra (opcional)" Ajuda="Ex.: cite o manual MQ-12, trate por você, mencione que é reincidência.">
+            <input @bind="_instrucaoExtra" maxlength="1000" />
+        </Campo>
+    </section>
+
+    @* ---------- 2. Prompts prontos ---------- *@
+    <section class="cartao">
+        <h2><span class="passo">2</span> Como montar o desvio?</h2>
+        <div class="prompts">
+            @foreach (var p in PromptsProntos.Todos)
+            {
+                <button type="button" class="prompt @(_ultimoPrompt == p.Id ? "ativo" : "")" disabled="@_gerando"
+                        @onclick="() => GerarAsync(p.Id)">
+                    <strong>@p.Titulo</strong>
+                    <span>@p.Dica</span>
+                </button>
+            }
+        </div>
+        @if (_gerando)
+        {
+            <p class="carregando">O Sr. Inspetor está escrevendo…</p>
+        }
+    </section>
+</div>
+
+@* ---------- 3. Revisar e enviar ---------- *@
+@if (_rascunho is not null)
+{
+    <section class="cartao revisar">
+        <h2><span class="passo">3</span> Revise e envie</h2>
+
+        <div class="grade">
+            <Campo Rotulo="Para" Ajuda="Separe vários e-mails com vírgula.">
+                <input type="email" multiple @bind="_rascunho.Para" />
+            </Campo>
+            <Campo Rotulo="Cópia (CC)" Ajuda="Ex.: e-mail da liderança.">
+                <input @bind="_rascunho.Cc" />
+            </Campo>
+        </div>
+        <Campo Rotulo="Assunto">
+            <input @bind="_rascunho.Assunto" maxlength="200" />
+        </Campo>
+        <Campo Rotulo="Mensagem">
+            <textarea class="corpo-email" rows="16" @bind="_rascunho.Corpo" @bind:event="oninput"></textarea>
+        </Campo>
+
+        @if (TemPendencias)
+        {
+            <p class="destaque-alerta">O texto tem pontos marcados com <code>[confirmar: …]</code>. Complete-os antes de enviar.</p>
+        }
+        <p class="ajuda">@(_imagens.Count == 0 ? "Nenhum print vai em anexo." : $"{_imagens.Count} print(s) vão em anexo.")</p>
+
+        <div class="barra-acoes">
+            <button type="button" class="botao secundario" @onclick="CopiarAsync">Copiar texto</button>
+            <button type="button" class="botao secundario" disabled="@_gerando" @onclick="() => GerarAsync(_ultimoPrompt!)">Gerar de novo</button>
+            <button type="button" class="botao" disabled="@_enviando" @onclick="EnviarAsync">@(_enviando ? "Enviando…" : "Enviar e-mail")</button>
+        </div>
+    </section>
+}
+
+@* ---------- Histórico ---------- *@
+@if (_historico.Count > 0)
+{
+    <section class="cartao">
+        <h2>Últimos desvios enviados</h2>
+        <div class="tabela-rolagem">
+            <table class="tabela compacta">
+                <thead><tr><th>Quando</th><th>Para</th><th>Assunto</th><th>Por</th><th>Processo</th></tr></thead>
+                <tbody>
+                    @foreach (var h in _historico)
+                    {
+                        <tr @key="h.Id">
+                            <td class="nowrap">@h.EnviadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@h.Para</td>
+                            <td>@h.Assunto</td>
+                            <td>@h.EnviadoPor</td>
+                            <td>@(h.ProcessoId is int pid ? $"#{pid}" : "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public int? ProcessoId { get; set; }
+
+    private List<ColaboradorDto> _colaboradores = [];
+    private List<EnvioHistorico> _historico = [];
+    private ProcessoDetalhe? _processo;
+    private int _colaboradorId;
+    private List<ImagemUpload> _imagens = [];
+    private string _descricao = "";
+    private string? _instrucaoExtra;
+    private string? _ultimoPrompt;
+    private EnviarDesvioRequest? _rascunho;
+    private bool _gerando;
+    private bool _enviando;
+
+    private bool TemPendencias => _rascunho?.Corpo.Contains("[confirmar", StringComparison.OrdinalIgnoreCase) == true
+                                  || _rascunho?.Assunto.Contains("[confirmar", StringComparison.OrdinalIgnoreCase) == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var cols = await Api.GetAsync<List<ColaboradorDto>>("api/colaboradores");
+        if (cols.Ok) _colaboradores = cols.Dado!;
+        await CarregarHistoricoAsync();
+    }
+
+    private int? _processoCarregado = -1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // A mesma página atende /sr-inspetor e /sr-inspetor/{id}: ao trocar, começa do zero.
+        if (ProcessoId == _processoCarregado) return;
+        _processoCarregado = ProcessoId;
+        _processo = null;
+        _rascunho = null;
+        _imagens = [];
+        _descricao = "";
+        _instrucaoExtra = null;
+        _ultimoPrompt = null;
+        _colaboradorId = 0;
+        if (ProcessoId is not int id) return;
+
+        var r = await Api.GetAsync<ProcessoDetalhe>($"api/processos/{id}");
+        if (!r.Ok) { Avisos.Erro(r.Erro!); return; }
+
+        _processo = r.Dado!;
+        _colaboradorId = _processo.ColaboradorId;
+        _descricao = _processo.Descricao;
+        foreach (var img in _processo.Imagens)
+        {
+            var arquivo = await Api.BaixarAsync($"api/imagens/{img.Id}");
+            if (arquivo.Ok)
+                _imagens.Add(new ImagemUpload
+                {
+                    NomeArquivo = img.NomeArquivo,
+                    ContentType = TipoPorExtensao(img.NomeArquivo),
+                    Base64 = Convert.ToBase64String(arquivo.Dado!),
+                });
+        }
+    }
+
+    private void AoEscolherColaborador(ChangeEventArgs e)
+    {
+        _colaboradorId = int.TryParse(e.Value?.ToString(), out var id) ? id : 0;
+        if (_rascunho is not null) _rascunho.Para = EmailColaborador ?? _rascunho.Para;
+    }
+
+    private string? EmailColaborador =>
+        _processo?.ColaboradorEmail ?? _colaboradores.FirstOrDefault(c => c.Id == _colaboradorId)?.Email;
+
+    private async Task GerarAsync(string promptId)
+    {
+        if (string.IsNullOrWhiteSpace(_descricao) && _imagens.Count == 0 && _processo is null)
+        {
+            Avisos.Alerta("Descreva o erro ou anexe pelo menos um print.");
+            return;
+        }
+
+        _ultimoPrompt = promptId;
+        _gerando = true;
+        var r = await Api.PostAsync<DesvioGerado>("api/sr-inspetor/gerar", new GerarDesvioRequest
+        {
+            PromptId = promptId,
+            Descricao = _descricao,
+            InstrucaoExtra = _instrucaoExtra,
+            ColaboradorId = _colaboradorId > 0 ? _colaboradorId : null,
+            ProcessoId = _processo?.Id,
+            Imagens = _imagens,
+        });
+        _gerando = false;
+
+        if (!r.Ok) { Avisos.Erro(r.Erro!); return; }
+
+        // Mantém destinatários já digitados ao gerar de novo.
+        _rascunho = new EnviarDesvioRequest
+        {
+            Para = _rascunho?.Para is { Length: > 0 } para ? para : EmailColaborador ?? "",
+            Cc = _rascunho?.Cc,
+            Assunto = r.Dado!.Assunto,
+            Corpo = r.Dado.Corpo,
+            ProcessoId = _processo?.Id,
+        };
+    }
+
+    private async Task CopiarAsync()
+    {
+        if (_rascunho is null) return;
+        var ok = await Navegador.CopiarAsync($"{_rascunho.Assunto}\n\n{_rascunho.Corpo}");
+        if (ok) Avisos.Info("Texto copiado.");
+        else Avisos.Alerta("Não foi possível copiar. Selecione o texto e use Ctrl+C.");
+    }
+
+    private async Task EnviarAsync()
+    {
+        if (_rascunho is null) return;
+        if (string.IsNullOrWhiteSpace(_rascunho.Para)) { Avisos.Alerta("Informe o destinatário."); return; }
+
+        var aviso = TemPendencias ? "\n\nAinda há trechos [confirmar: …] no texto." : "";
+        if (!await Navegador.ConfirmarAsync($"Enviar o desvio para {_rascunho.Para}?{aviso}")) return;
+
+        _enviando = true;
+        _rascunho.Imagens = _imagens;
+        var r = await Api.PostAsync<Mensagem>("api/sr-inspetor/enviar", _rascunho);
+        _enviando = false;
+
+        if (!r.Ok) { Avisos.Erro(r.Erro!); return; }
+        Avisos.Sucesso(r.Dado!.Texto);
+        _rascunho = null;
+        _imagens = [];
+        _descricao = "";
+        _instrucaoExtra = null;
+        _ultimoPrompt = null;
+        await CarregarHistoricoAsync();
+    }
+
+    private async Task CarregarHistoricoAsync()
+    {
+        var h = await Api.GetAsync<List<EnvioHistorico>>("api/sr-inspetor/historico");
+        if (h.Ok) _historico = h.Dado!;
+    }
+
+    private static string TipoPorExtensao(string nome) => Path.GetExtension(nome).ToLowerInvariant() switch
+    {
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".gif" => "image/gif",
+        ".webp" => "image/webp",
+        _ => "image/png",
+    };
+}

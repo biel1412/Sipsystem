@@ -1,0 +1,38 @@
+@page "/colaborador/novo"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject NavigationManager Nav
+@inject Avisos Avisos
+
+<PageTitle>Novo colaborador - SIP</PageTitle>
+
+<section class="cartao estreito">
+    <h1>Novo colaborador</h1>
+    <EditForm Model="_modelo" OnValidSubmit="SalvarAsync" FormName="novo-colaborador">
+        <DataAnnotationsValidator />
+        <Campo Rotulo="Nome">
+            <InputText @bind-Value="_modelo.Nome" />
+            <ValidationMessage For="() => _modelo.Nome" />
+        </Campo>
+        <Campo Rotulo="E-mail" Ajuda="Também é o login do colaborador no SIP.">
+            <InputText @bind-Value="_modelo.Email" type="email" />
+            <ValidationMessage For="() => _modelo.Email" />
+        </Campo>
+        <button type="submit" class="botao largo" disabled="@_enviando">Adicionar colaborador</button>
+    </EditForm>
+</section>
+
+@code {
+    private readonly NovoColaboradorRequest _modelo = new();
+    private bool _enviando;
+
+    private async Task SalvarAsync()
+    {
+        _enviando = true;
+        var r = await Api.PostAsync<ColaboradorDto>("api/colaboradores", _modelo);
+        _enviando = false;
+        if (!r.Ok) { Avisos.Erro(r.Erro!); return; }
+        Avisos.Sucesso("Colaborador adicionado com sucesso!");
+        Nav.NavigateTo("colaboradores");
+    }
+}

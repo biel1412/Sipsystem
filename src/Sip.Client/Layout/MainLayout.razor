@@ -1,0 +1,77 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject SessaoAuth Sessao
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider Auth
+
+<AuthorizeView>
+    <Authorized>
+        <header class="navbar">
+            <a class="marca" href="processos">
+                <img src="img/sr-inspetor.svg" alt="" width="34" height="34" />
+                <span>SIP Qualidade</span>
+            </a>
+            <button class="menu-botao" type="button" aria-label="Abrir menu" @onclick="() => _menuAberto = !_menuAberto">☰</button>
+            <nav class="menu @(_menuAberto ? "aberto" : "")" @onclick="() => _menuAberto = false">
+                <NavLink href="processos">Início</NavLink>
+                <NavLink href="processo/novo">Novo Processo</NavLink>
+                <NavLink href="sr-inspetor" class="destaque">Sr. Inspetor</NavLink>
+                <NavLink href="painel">Painel</NavLink>
+                <NavLink href="colaboradores">Colaboradores</NavLink>
+                <NavLink href="colaborador/novo">Novo Colaborador</NavLink>
+                <NavLink href="grafico">Gráfico</NavLink>
+                <NavLink href="meu-perfil">Meu Perfil</NavLink>
+                <NavLink href="deletar-registros">Deletar Registros</NavLink>
+                <a href="https://nicolebr1.onrender.com/" target="_blank" rel="noopener noreferrer">Assistente Virtual</a>
+                <a href="" @onclick="SairAsync" @onclick:preventDefault>Sair</a>
+            </nav>
+        </header>
+    </Authorized>
+</AuthorizeView>
+
+<main class="container">
+    <AreaAvisos />
+    @Body
+</main>
+
+<footer class="rodape">SIP &copy; @DateTime.Now.Year - Sistema Integrado de Inspeção</footer>
+
+@code {
+    private bool _menuAberto;
+
+    protected override void OnInitialized()
+    {
+        Auth.AuthenticationStateChanged += AoMudarLogin;
+        Nav.LocationChanged += AoNavegar;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Auth.GetAuthenticationStateAsync();
+        ExigirTrocaDeSenha();
+    }
+
+    // Quem entrou com a senha padrão só pode ficar na tela de troca de senha.
+    private void ExigirTrocaDeSenha()
+    {
+        var caminho = Nav.ToBaseRelativePath(Nav.Uri);
+        if (Sessao.Usuario?.PrecisaTrocarSenha == true && !caminho.StartsWith("trocar-senha"))
+            Nav.NavigateTo("trocar-senha");
+    }
+
+    private void AoNavegar(object? sender, LocationChangedEventArgs e) => ExigirTrocaDeSenha();
+
+    private void AoMudarLogin(Task<AuthenticationState> _) => InvokeAsync(() => { ExigirTrocaDeSenha(); StateHasChanged(); });
+
+    private async Task SairAsync()
+    {
+        await Sessao.SairAsync();
+        Nav.NavigateTo("login");
+    }
+
+    public void Dispose()
+    {
+        Auth.AuthenticationStateChanged -= AoMudarLogin;
+        Nav.LocationChanged -= AoNavegar;
+    }
+}

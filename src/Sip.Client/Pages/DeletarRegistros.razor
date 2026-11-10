@@ -1,0 +1,80 @@
+@page "/deletar-registros"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject Navegador Navegador
+@inject Avisos Avisos
+
+<PageTitle>Deletar registros - SIP</PageTitle>
+
+<h1>Deletar registros</h1>
+<p class="destaque-alerta">Atenção: a exclusão é definitiva e apaga também as imagens dos processos.</p>
+
+<section class="cartao">
+    <h2>Processos de um colaborador</h2>
+    <div class="linha-filtros">
+        <Campo Rotulo="Colaborador">
+            <select @bind="_colaboradorId">
+                <option value="0">Selecione</option>
+                @foreach (var c in _colaboradores)
+                {
+                    <option value="@c.Id">@c.Nome (@c.TotalProcessos)</option>
+                }
+            </select>
+        </Campo>
+        <button type="button" class="botao perigo" disabled="@(_colaboradorId == 0 || _ocupado)" @onclick="DeletarColaboradorAsync">
+            Deletar processos do colaborador
+        </button>
+    </div>
+</section>
+
+<section class="cartao zona-perigo">
+    <h2>Todos os registros</h2>
+    <p>Para apagar <strong>todos</strong> os processos, digite <code>APAGAR</code> abaixo.</p>
+    <div class="linha-filtros">
+        <Campo Rotulo="Confirmação"><input @bind="_confirmacao" @bind:event="oninput" placeholder="APAGAR" /></Campo>
+        <button type="button" class="botao perigo" disabled="@(_confirmacao != "APAGAR" || _ocupado)" @onclick="DeletarTodosAsync">
+            Deletar todos os registros
+        </button>
+    </div>
+</section>
+
+@code {
+    private List<ColaboradorDto> _colaboradores = [];
+    private int _colaboradorId;
+    private string _confirmacao = "";
+    private bool _ocupado;
+
+    protected override Task OnInitializedAsync() => CarregarAsync();
+
+    private async Task CarregarAsync()
+    {
+        var r = await Api.GetAsync<List<ColaboradorDto>>("api/colaboradores");
+        if (r.Ok) _colaboradores = r.Dado!;
+        else Avisos.Erro(r.Erro!);
+    }
+
+    private async Task DeletarColaboradorAsync()
+    {
+        var nome = _colaboradores.FirstOrDefault(c => c.Id == _colaboradorId)?.Nome;
+        if (!await Navegador.ConfirmarAsync($"Apagar todos os processos de {nome}?")) return;
+        _ocupado = true;
+        var r = await Api.PostAsync<DeletarResultado>("api/processos/deletar-por-colaborador",
+            new DeletarPorColaboradorRequest { ColaboradorId = _colaboradorId });
+        _ocupado = false;
+        if (!r.Ok) { Avisos.Erro(r.Erro!); return; }
+        Avisos.Alerta($"{r.Dado!.ProcessosRemovidos} processo(s) de {nome} removido(s).");
+        _colaboradorId = 0;
+        await CarregarAsync();
+    }
+
+    private async Task DeletarTodosAsync()
+    {
+        _ocupado = true;
+        var r = await Api.PostAsync<DeletarResultado>("api/processos/deletar-todos?confirmar=APAGAR");
+        _ocupado = false;
+        if (!r.Ok) { Avisos.Erro(r.Erro!); return; }
+        Avisos.Alerta($"{r.Dado!.ProcessosRemovidos} processo(s) removido(s).");
+        _confirmacao = "";
+        await CarregarAsync();
+    }
+}

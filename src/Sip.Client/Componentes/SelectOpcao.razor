@@ -1,0 +1,15 @@
+@* Select de opções com valor e texto diferentes (ex.: "Gravissimo" / "Gravíssimo"). *@
+<select value="@Valor" @onchange="AoMudar">
+    @foreach (var o in Opcoes)
+    {
+        <option value="@o.Valor">@o.Texto</option>
+    }
+</select>
+
+@code {
+    [Parameter] public string? Valor { get; set; }
+    [Parameter] public EventCallback<string?> ValorChanged { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<Opcao> Opcoes { get; set; } = [];
+
+    private Task AoMudar(ChangeEventArgs e) => ValorChanged.InvokeAsync(e.Value?.ToString());
+}

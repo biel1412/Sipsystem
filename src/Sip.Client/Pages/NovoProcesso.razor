@@ -1,0 +1,115 @@
+@page "/processo/novo"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject NavigationManager Nav
+@inject Avisos Avisos
+
+<PageTitle>Novo processo - SIP</PageTitle>
+
+<h1>Registrar processo</h1>
+
+@if (_colaboradores is null)
+{
+    <p class="carregando">Carregando…</p>
+}
+else if (_colaboradores.Count == 0)
+{
+    <section class="cartao vazio">
+        <p>Nenhum colaborador cadastrado ainda. <a href="colaborador/novo">Cadastre o primeiro colaborador</a>.</p>
+    </section>
+}
+else
+{
+    <EditForm Model="_modelo" OnValidSubmit="SalvarAsync" FormName="novo-processo">
+        <DataAnnotationsValidator />
+
+        <section class="cartao">
+            <h2>Análise</h2>
+            <div class="grade">
+                <Campo Rotulo="Colaborador">
+                    <InputSelect @bind-Value="_modelo.ColaboradorId">
+                        <option value="0">Selecione</option>
+                        @foreach (var c in _colaboradores)
+                        {
+                            <option value="@c.Id">@c.Nome</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => _modelo.ColaboradorId" />
+                </Campo>
+                <Campo Rotulo="Status">
+                    <InputSelect @bind-Value="_modelo.Status">
+                        @foreach (var s in Opcoes.Status)
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    </InputSelect>
+                </Campo>
+            </div>
+            <Campo Rotulo="Descrição do erro">
+                <InputTextArea @bind-Value="_modelo.Descricao" rows="4" />
+            </Campo>
+            <Campo Rotulo="Procedimento correto">
+                <InputTextArea @bind-Value="_modelo.Observacoes" rows="3" />
+            </Campo>
+        </section>
+
+        <section class="cartao">
+            <h2>Detalhes da inspeção</h2>
+            <div class="grade">
+                <Campo Rotulo="Coordenação"><SelectTexto @bind-Valor="_modelo.Coordenacao" Opcoes="Opcoes.Coordenacao" /></Campo>
+                <Campo Rotulo="Liderança"><SelectTexto @bind-Valor="_modelo.Lideranca" Opcoes="Opcoes.Lideranca" /></Campo>
+                <Campo Rotulo="Inspetor"><SelectTexto @bind-Valor="_modelo.Inspetor" Opcoes="Opcoes.Inspetor" /></Campo>
+                <Campo Rotulo="Data da inspeção"><InputDate @bind-Value="_modelo.DataInspecao" /></Campo>
+                <Campo Rotulo="Data de execução"><InputDate @bind-Value="_modelo.DataExecucao" /></Campo>
+                <Campo Rotulo="CPF/CNPJ" Ajuda="Guardado criptografado (AES-256).">
+                    <InputText @bind-Value="_modelo.CpfCnpj" inputmode="numeric" maxlength="18" />
+                </Campo>
+                <Campo Rotulo="Coop"><InputText @bind-Value="_modelo.Coop" /></Campo>
+                <Campo Rotulo="Tipo"><SelectTexto @bind-Valor="_modelo.Tipo" Opcoes="Opcoes.Tipo" SemVazio /></Campo>
+                <Campo Rotulo="Interno ou externo"><SelectTexto @bind-Valor="_modelo.InternoExterno" Opcoes="Opcoes.InternoExterno" SemVazio /></Campo>
+                <Campo Rotulo="Tipo de autorização"><SelectTexto @bind-Valor="_modelo.TipoAutorizacao" Opcoes="Opcoes.TipoAutorizacao" SemVazio /></Campo>
+                <Campo Rotulo="Tipo de erro"><SelectOpcao @bind-Valor="_modelo.TipoErro" Opcoes="Opcoes.TipoErro" /></Campo>
+                <Campo Rotulo="Gravidade"><SelectOpcao @bind-Valor="_modelo.Gravidade" Opcoes="Opcoes.Gravidade" /></Campo>
+                <Campo Rotulo="Desvio de atenção"><SelectOpcao @bind-Valor="_modelo.DesvioAtencao" Opcoes="Opcoes.DesvioAtencao" /></Campo>
+                <Campo Rotulo="Reversão"><SelectOpcao @bind-Valor="_modelo.Reversao" Opcoes="Opcoes.Reversao" /></Campo>
+                <Campo Rotulo="Quais fluxos"><InputText @bind-Value="_modelo.Fluxos" /></Campo>
+                <Campo Rotulo="Solicitante"><InputText @bind-Value="_modelo.Solicitante" /></Campo>
+            </div>
+        </section>
+
+        <section class="cartao">
+            <h2>Evidências (prints)</h2>
+            <SeletorImagens @bind-Imagens="_modelo.Imagens" />
+        </section>
+
+        <div class="barra-acoes">
+            <a href="processos" class="botao secundario">Cancelar</a>
+            <button type="submit" class="botao" disabled="@_enviando">@(_enviando ? "Salvando…" : "Registrar processo")</button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private List<ColaboradorDto>? _colaboradores;
+    private readonly NovoProcessoRequest _modelo = new() { DataInspecao = DateOnly.FromDateTime(DateTime.Today) };
+    private bool _enviando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var r = await Api.GetAsync<List<ColaboradorDto>>("api/colaboradores");
+        if (r.Ok) _colaboradores = r.Dado;
+        else Avisos.Erro(r.Erro!);
+    }
+
+    private async Task SalvarAsync()
+    {
+        _enviando = true;
+        var r = await Api.PostAsync<ProcessoCriado>("api/processos", _modelo);
+        _enviando = false;
+        if (!r.Ok) { Avisos.Erro(r.Erro!); return; }
+
+        Avisos.Sucesso(r.Dado!.Texto);
+        // Se for desvio, já oferece montar o e-mail com o Sr. Inspetor.
+        Nav.NavigateTo(_modelo.Status == Opcoes.StatusDesvio ? $"sr-inspetor/{r.Dado.Id}" : "processos");
+    }
+}

@@ -1,0 +1,18 @@
+@* Rótulo + campo + mensagem de validação, para não repetir o mesmo HTML em todo formulário. *@
+<div class="campo @Classe">
+    <label>
+        <span class="rotulo">@Rotulo</span>
+        @ChildContent
+    </label>
+    @if (!string.IsNullOrEmpty(Ajuda))
+    {
+        <small class="ajuda">@Ajuda</small>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Rotulo { get; set; } = "";
+    [Parameter] public string? Ajuda { get; set; }
+    [Parameter] public string? Classe { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

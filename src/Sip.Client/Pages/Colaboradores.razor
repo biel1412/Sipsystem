@@ -1,0 +1,59 @@
+@page "/colaboradores"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject Avisos Avisos
+
+<PageTitle>Colaboradores - SIP</PageTitle>
+
+<div class="cabecalho-pagina">
+    <h1>Colaboradores</h1>
+    <a href="colaborador/novo" class="botao">+ Novo colaborador</a>
+</div>
+
+<section class="cartao">
+    @if (_lista is null)
+    {
+        <p class="carregando">Carregando…</p>
+    }
+    else if (_lista.Count == 0)
+    {
+        <p class="vazio">Nenhum colaborador cadastrado.</p>
+    }
+    else
+    {
+        <input type="search" class="busca" placeholder="Buscar por nome ou e-mail" @bind="_busca" @bind:event="oninput" />
+        <div class="tabela-rolagem">
+            <table class="tabela">
+                <thead><tr><th>Nome</th><th>E-mail</th><th class="num">Processos</th><th>Ações</th></tr></thead>
+                <tbody>
+                    @foreach (var c in Filtrados)
+                    {
+                        <tr @key="c.Id">
+                            <td>@c.Nome</td>
+                            <td>@c.Email</td>
+                            <td class="num">@c.TotalProcessos</td>
+                            <td class="acoes"><a href="painel?colaborador=@c.Id">Ver no painel</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    private List<ColaboradorDto>? _lista;
+    private string _busca = "";
+
+    private IEnumerable<ColaboradorDto> Filtrados => _lista!.Where(c =>
+        string.IsNullOrWhiteSpace(_busca)
+        || c.Nome.Contains(_busca, StringComparison.OrdinalIgnoreCase)
+        || c.Email.Contains(_busca, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        var r = await Api.GetAsync<List<ColaboradorDto>>("api/colaboradores");
+        if (r.Ok) _lista = r.Dado;
+        else Avisos.Erro(r.Erro!);
+    }
+}

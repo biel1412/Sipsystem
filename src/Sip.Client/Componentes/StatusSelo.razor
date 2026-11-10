@@ -1,0 +1,5 @@
+<span class="selo @(Status == Opcoes.StatusDesvio ? "desvio" : "conforme")">@Status</span>
+
+@code {
+    [Parameter] public string? Status { get; set; }
+}

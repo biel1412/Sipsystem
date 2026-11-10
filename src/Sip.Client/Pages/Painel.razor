@@ -1,0 +1,99 @@
+@page "/painel"
+@attribute [Authorize]
+@inject ApiCliente Api
+@inject Avisos Avisos
+
+<PageTitle>Painel - SIP</PageTitle>
+
+<h1>Painel</h1>
+
+<section class="cartao">
+    <div class="linha-filtros">
+        <Campo Rotulo="Colaborador">
+            <select @bind="_colaboradorId">
+                <option value="0">Todos</option>
+                @foreach (var c in _colaboradores)
+                {
+                    <option value="@c.Id">@c.Nome</option>
+                }
+            </select>
+        </Campo>
+        <Campo Rotulo="Status">
+            <select @bind="_status">
+                <option value="">Todos</option>
+                @foreach (var s in Opcoes.Status)
+                {
+                    <option value="@s">@s</option>
+                }
+            </select>
+        </Campo>
+        <Campo Rotulo="De"><input type="date" @bind="_inicio" /></Campo>
+        <Campo Rotulo="Até"><input type="date" @bind="_fim" /></Campo>
+        <Campo Rotulo="Palavra na descrição"><input type="search" @bind="_palavra" /></Campo>
+        <button type="button" class="botao" @onclick="() => BuscarAsync(1)">Filtrar</button>
+        <button type="button" class="botao secundario" @onclick="LimparAsync">Limpar</button>
+    </div>
+</section>
+
+@if (_resultado is null)
+{
+    <p class="carregando">Carregando…</p>
+}
+else
+{
+    <div class="indicadores">
+        <div class="indicador"><span class="valor">@_resultado.Total</span><span class="nome">Processos</span></div>
+        <div class="indicador conforme"><span class="valor">@_resultado.Conformes</span><span class="nome">Conformes</span></div>
+        <div class="indicador desvio"><span class="valor">@_resultado.Desvios</span><span class="nome">Desvios</span></div>
+        <div class="indicador"><span class="valor">@Percentual</span><span class="nome">Conformidade</span></div>
+    </div>
+
+    <section class="cartao">
+        <TabelaProcessos Itens="_resultado.Processos.Itens" />
+        <Paginacao PaginaAtual="_resultado.Processos.PaginaAtual" TotalPaginas="_resultado.Processos.TotalPaginas" AoMudar="BuscarAsync" />
+    </section>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "colaborador")] public int? ColaboradorQuery { get; set; }
+
+    private List<ColaboradorDto> _colaboradores = [];
+    private PainelResultado? _resultado;
+    private int _colaboradorId;
+    private string _status = "";
+    private string _palavra = "";
+    private DateOnly? _inicio;
+    private DateOnly? _fim;
+
+    private string Percentual => _resultado is { Total: > 0 } r ? $"{100.0 * r.Conformes / r.Total:0}%" : "–";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _colaboradorId = ColaboradorQuery ?? 0;
+        var r = await Api.GetAsync<List<ColaboradorDto>>("api/colaboradores");
+        if (r.Ok) _colaboradores = r.Dado!;
+        await BuscarAsync(1);
+    }
+
+    private async Task BuscarAsync(int pagina)
+    {
+        var q = new List<string> { $"pagina={pagina}" };
+        if (_colaboradorId > 0) q.Add($"colaboradorId={_colaboradorId}");
+        if (!string.IsNullOrEmpty(_status)) q.Add($"status={Uri.EscapeDataString(_status)}");
+        if (!string.IsNullOrWhiteSpace(_palavra)) q.Add($"palavra={Uri.EscapeDataString(_palavra)}");
+        if (_inicio is not null) q.Add($"dataInicio={_inicio:yyyy-MM-dd}");
+        if (_fim is not null) q.Add($"dataFim={_fim:yyyy-MM-dd}");
+
+        var r = await Api.GetAsync<PainelResultado>("api/painel?" + string.Join('&', q));
+        if (r.Ok) _resultado = r.Dado;
+        else Avisos.Erro(r.Erro!);
+    }
+
+    private Task LimparAsync()
+    {
+        _colaboradorId = 0;
+        _status = _palavra = "";
+        _inicio = _fim = null;
+        return BuscarAsync(1);
+    }
+}
