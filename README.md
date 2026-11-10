@@ -67,7 +67,8 @@ ou do *user-secrets* no desenvolvimento. **Nunca coloque senhas e chaves no Git.
 
 | Configuração | Para que serve |
 |---|---|
-| `ConnectionStrings:Sip` | Conexão PostgreSQL. Ex.: `Host=localhost;Database=sip;Username=sip;Password=...` |
+| `ConnectionStrings:Sip` ou `DATABASE_URL` | Conexão PostgreSQL. Aceita `Host=localhost;Database=sip;Username=sip;Password=...` ou a URL do Render (`postgresql://usuario:senha@host/banco`). |
+| `Banco:Schema` | Opcional. Coloca as tabelas do SIP num schema próprio (ex.: `sip`) para dividir o banco com outro sistema sem misturar tabelas. |
 | `Seguranca:ChaveAes` | **Obrigatória.** 32 bytes em base64. Gere com `openssl rand -base64 32` (ou PowerShell abaixo). **Guarde bem: sem ela os dados criptografados não podem ser lidos.** |
 | `Seguranca:SenhaPadrao` | Senha do primeiro acesso dos colaboradores (padrão `123456`). Deixe vazio para desativar. |
 | `Admin:Email` / `Admin:Senha` | Cria um usuário administrador na primeira execução (opcional). |

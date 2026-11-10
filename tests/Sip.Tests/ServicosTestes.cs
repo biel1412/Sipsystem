@@ -138,3 +138,34 @@ public class ServicosTestes
         Assert.Contains("<p", html);
     }
 }
+
+public class ConexaoBancoTestes
+{
+    [Fact]
+    public void Url_DoRender_ViraConnectionString()
+    {
+        var cs = new Npgsql.NpgsqlConnectionStringBuilder(
+            Sip.Api.Dados.ConexaoBanco.Montar("postgresql://usuario:s%40nha@dpg-abc-a.virginia-postgres.render.com/banco", "sip"));
+        Assert.Equal("dpg-abc-a.virginia-postgres.render.com", cs.Host);
+        Assert.Equal("banco", cs.Database);
+        Assert.Equal("usuario", cs.Username);
+        Assert.Equal("s@nha", cs.Password);
+        Assert.Equal("sip", cs.SearchPath);
+        Assert.Equal(Npgsql.SslMode.Require, cs.SslMode);
+    }
+
+    [Fact]
+    public void Url_Interna_SemSsl()
+    {
+        var cs = new Npgsql.NpgsqlConnectionStringBuilder(Sip.Api.Dados.ConexaoBanco.Montar("postgres://u:p@dpg-abc-a/banco", null));
+        Assert.Equal("dpg-abc-a", cs.Host);
+        Assert.Equal(5432, cs.Port);
+        Assert.Null(cs.SearchPath);
+    }
+
+    [Theory]
+    [InlineData("sip; drop table x")]
+    [InlineData("1sip")]
+    public void Schema_Invalido_Recusado(string schema) =>
+        Assert.ThrowsAny<InvalidOperationException>(() => Sip.Api.Dados.ConexaoBanco.SchemaValido(schema));
+}

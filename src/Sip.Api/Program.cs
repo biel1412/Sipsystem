@@ -20,8 +20,10 @@ var cfg = builder.Configuration;
 builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestBodySize = 80 * 1024 * 1024);
 
 // ---------- Banco e segurança ----------
-var conexao = cfg.GetConnectionString("Sip")
-    ?? throw new InvalidOperationException("Configure ConnectionStrings:Sip (PostgreSQL).");
+var schemaBanco = cfg["Banco:Schema"];
+var conexao = ConexaoBanco.Montar(
+    string.IsNullOrWhiteSpace(cfg.GetConnectionString("Sip")) ? cfg["DATABASE_URL"] : cfg.GetConnectionString("Sip"),
+    schemaBanco);
 var fonteDados = NpgsqlDataSource.Create(conexao);
 builder.Services.AddSingleton<DbDataSource>(fonteDados);
 builder.Services.AddSingleton<Db>();
@@ -87,6 +89,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<Db>();
+    if (!string.IsNullOrWhiteSpace(schemaBanco))
+        await db.ExecutarAsync($"CREATE SCHEMA IF NOT EXISTS {ConexaoBanco.SchemaValido(schemaBanco)}");
     await db.CriarEsquemaAsync();
     await db.ExecutarAsync(ChavesNoBanco.Sql);
     await AuthEndpoints.CriarAdminAsync(db, cfg, app.Logger);
